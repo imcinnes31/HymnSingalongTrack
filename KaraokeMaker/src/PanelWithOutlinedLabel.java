@@ -1,9 +1,19 @@
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.plaf.ColorUIResource;
+import javax.swing.plaf.basic.BasicArrowButton;
+import javax.swing.plaf.basic.BasicComboBoxUI;
+import javax.swing.plaf.basic.BasicComboPopup;
+import javax.swing.plaf.basic.BasicScrollBarUI;
+import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
@@ -14,6 +24,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyAdapter;
 import java.util.ArrayList;
@@ -75,6 +86,8 @@ public class PanelWithOutlinedLabel {
 	private static Timer infoFadeOutTimer;
 	private static Timer infoFadeInTimer;
 	private static int currentHymnID = 0;
+	private static int musician = 0;
+	private static boolean usePauses = true;
 	private static Hymn selectedMenuItem = null;
 	private static String[][] currentHymnData;
 	
@@ -84,27 +97,15 @@ public class PanelWithOutlinedLabel {
     private static final String PASS = "i84r6te0qju8rb7w";
     private static final String PORT = "3306";
 	
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-//        	menuFrame = new JFrame("Hymn Sing Along");
-//        	menuFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        	menuFrame.setSize(700,200);
-//        	menuFrame.setLocationRelativeTo(null); 
-
-//        	icons = new ArrayList<Image>();
-//        	icons.add(Toolkit.getDefaultToolkit().getImage("src\\cross16.png"));
-//        	icons.add(Toolkit.getDefaultToolkit().getImage("src\\cross32.png"));
-//        	icons.add(Toolkit.getDefaultToolkit().getImage("src\\cross48.png"));
-//        	icons.add(Toolkit.getDefaultToolkit().getImage("src\\cross256.png"));
-//        	menuFrame.setIconImages(icons);
-        	
-//            int yOffset = 100; 
-//        	
-//        	Rectangle menuBounds = menuFrame.getBounds();
-//        	menuFrame.setLocation(menuBounds.x, yOffset);
-        	
+    public static void main(String[] args) {     
+        UIManager.put("ComboBox.selectionBackground", new ColorUIResource(Color.decode("#008800")));
+        UIManager.put("ComboBox.selectionForeground", new ColorUIResource(Color.decode("#004400")));
+        UIManager.put("Button.select", Color.decode("#008800"));
+        UIManager.put("Button.focus", Color.decode("#00DD00"));
+        
+        SwingUtilities.invokeLater(() -> {        	
         	menuPane = new JPanel();
-        	Dimension menuPaneDim = new Dimension(700,200);
+        	Dimension menuPaneDim = new Dimension(700,225);
         	menuPane.setPreferredSize(menuPaneDim);
         	menuPane.setMinimumSize(menuPaneDim);
         	menuPane.setMaximumSize(menuPaneDim);
@@ -118,14 +119,37 @@ public class PanelWithOutlinedLabel {
         	    }
         	};
             GridBagConstraints gbc = new GridBagConstraints();
+            
+        	Border line = BorderFactory.createLineBorder(Color.decode("#004400"), 2);
+        	Border padding = BorderFactory.createEmptyBorder(3, 13, 3, 13);
+        	Border compound = BorderFactory.createCompoundBorder(line, padding);
 
         	JButton quitButton = new JButton("Quit");
-        	quitButton.setBackground(Color.PINK);
         	Font quitButtonFont = new Font("Times New Roman", Font.BOLD, 18);
         	quitButton.setFont(quitButtonFont);
-        	quitButton.setFocusPainted(false);
+        	quitButton.setBackground(Color.decode("#00DD00"));
+        	quitButton.setForeground(Color.decode("#004400"));
+//        	quitButton.setContentAreaFilled(false); 
+        	quitButton.setOpaque(true);
         	
-            gbc.gridx = 1; // Second column
+//        	quitButton.setFocusPainted(false);
+        	quitButton.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15)); // Default padding
+
+        	quitButton.addMouseListener(new java.awt.event.MouseAdapter() {
+        	    @Override
+        	    public void mouseEntered(java.awt.event.MouseEvent evt) {
+        	        // Change to your desired hover line color
+        	    	quitButton.setBorder(compound); 
+        	    }
+
+        	    @Override
+        	    public void mouseExited(java.awt.event.MouseEvent evt) {
+        	        // Revert to original border when not hovering
+        	    	quitButton.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15)); 
+        	    }
+        	});
+
+        	gbc.gridx = 1; // Second column
             gbc.gridy = 0; // First row
             gbc.weightx = 0;
             gbc.weighty = 0;
@@ -134,8 +158,9 @@ public class PanelWithOutlinedLabel {
             appHeader.add(quitButton, gbc);
 
             JLabel menuHeaderLabelChurch = new JLabel("St. John's Presbyterian Church");
-            Font customFont = new Font("Times New Roman", Font.BOLD | Font.ITALIC, 24);
-            menuHeaderLabelChurch.setFont(customFont);
+            Font headerFont = new Font("Times New Roman", Font.BOLD | Font.ITALIC, 24);
+            menuHeaderLabelChurch.setFont(headerFont);
+            menuHeaderLabelChurch.setForeground(Color.decode("#004400"));
             menuHeaderLabelChurch.setHorizontalAlignment(SwingConstants.CENTER);
             menuHeaderLabelChurch.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         	
@@ -147,16 +172,83 @@ public class PanelWithOutlinedLabel {
             gbc.anchor = GridBagConstraints.CENTER;
             appHeader.add(menuHeaderLabelChurch, gbc);
             
-        	appHeader.setBackground(Color.decode("#F9EECF"));
+        	appHeader.setBackground(Color.decode("#00EE00"));
             menuPane.add(appHeader);
         	
         	JLabel menuHeaderLabelApp = new JLabel("Hymn Singalong");
         	menuHeaderLabelApp.setAlignmentX(Component.CENTER_ALIGNMENT);
-            Font customFont2 = new Font("Times New Roman", Font.ITALIC, 18);
-            menuHeaderLabelApp.setFont(customFont2);
+            Font menuFont = new Font("Times New Roman", Font.ITALIC, 18);
+            menuHeaderLabelApp.setFont(menuFont);
+            menuHeaderLabelApp.setForeground(Color.decode("#004400"));
+            
             menuHeaderLabelApp.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         	menuPane.add(menuHeaderLabelApp);
         	
+        	JLabel musicianLabel = new JLabel("Musician:");
+        	JRadioButton musician0Option = new JRadioButton("Kenneth Tham");
+            JRadioButton musician1Option = new JRadioButton("Silas and Peter Jo");
+            JRadioButton musician2Option = new JRadioButton("Kenneth Tham (No Pauses)");
+            
+            musician0Option.setSelected(true);
+
+            ButtonGroup musicianGroup = new ButtonGroup();
+            
+            musicianGroup.add(musician0Option);
+            musicianGroup.add(musician1Option);
+            musicianGroup.add(musician2Option);
+            musician0Option.setActionCommand("TAG_01");
+            musician1Option.setActionCommand("TAG_10");
+            musician2Option.setActionCommand("TAG_00");
+            
+            ActionListener musicianListener = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                	String radioTag = e.getActionCommand().replace("TAG_","");
+                    musician = Character.getNumericValue(radioTag.charAt(0));
+                    usePauses = Character.getNumericValue(radioTag.charAt(1)) == 1 ? true : false;
+                }
+            };
+
+            musician0Option.addActionListener(musicianListener);
+            musician1Option.addActionListener(musicianListener);
+            musician2Option.addActionListener(musicianListener);
+
+            Color circleColor = Color.decode("#004400");
+            Icon unselectedIcon = new CustomRadioIcon(circleColor, false);
+            Icon selectedIcon = new CustomRadioIcon(circleColor, true);
+            
+            musician0Option.setFocusPainted(false);
+            musician1Option.setFocusPainted(false);
+            musician2Option.setFocusPainted(false);
+            musician0Option.setIcon(unselectedIcon);
+            musician0Option.setSelectedIcon(selectedIcon);
+            musician1Option.setIcon(unselectedIcon);
+            musician1Option.setSelectedIcon(selectedIcon);
+            musician2Option.setIcon(unselectedIcon);
+            musician2Option.setSelectedIcon(selectedIcon);
+            
+            JPanel musicianPanel = new JPanel();
+            musicianPanel.setBackground(Color.decode("#00EE00"));
+        	Dimension musicianPaneDim = new Dimension(650,40);
+        	musicianPanel.setPreferredSize(musicianPaneDim);
+        	musicianPanel.setMinimumSize(musicianPaneDim);
+        	musicianPanel.setMaximumSize(musicianPaneDim);
+            musicianPanel.setLayout(new FlowLayout());
+            musicianPanel.add(musicianLabel);
+            musicianPanel.add(musician0Option);
+            musicianPanel.add(musician1Option);
+            musicianPanel.add(musician2Option);
+            Font musicianFont = new Font("Times New Roman", Font.BOLD, 16);
+            Component[] musicianComponents = musicianPanel.getComponents();
+            
+            for (Component comp : musicianComponents) {
+                comp.setFont(musicianFont);
+                comp.setForeground(Color.decode("#004400"));
+                comp.setBackground(Color.decode("#00EE00"));
+            }
+        	
+            menuPane.add(musicianPanel);
+            
             Connection conn = null;
             String connectionUrl = "jdbc:mysql://" + DB_HOST + ":" + PORT + "/" + DB_NAME + 
                                    "?verifyServerCertificate=false&useSSL=true";
@@ -176,25 +268,12 @@ public class PanelWithOutlinedLabel {
                 	hymnList.add(new Hymn(rsAllHymns.getInt("hymnID"),rsAllHymns.getInt("hymnNumber"),rsAllHymns.getString("hymnTitle")));
                 }
                 
-//                hymnList.add(new Hymn(2,11,"The Lord's My Shepherd"));
-//                hymnList.add(new Hymn(3,638,"Take Time To Be Holy"));
-//                hymnList.add(new Hymn(4,637,"Take My Life, And Let It Be"));
-//                hymnList.add(new Hymn(5,0,"My Peace I Give Unto You"));
-//                hymnList.add(new Hymn(6,243,"Jesus Christ Is Risen Today"));
-//                hymnList.add(new Hymn(7,260,"Alleluia, Alleluia, Give Thanks To The Risen Lord"));
-//                hymnList.add(new Hymn(8,258,"Thine Be The Glory"));
-//                hymnList.add(new Hymn(9,250,"I Danced In The Morning / Lord Of The Dance"));
-                
                 hymnList.sort(Comparator.comparing(Hymn::getHymnNumber));
 
                 Hymn[] items = hymnList.toArray(new Hymn[hymnList.size()]);
                 
                 comboBox = new JComboBox<Hymn>(items);  
-                
-//                String[] speedOptions = {"50", "100", "200", "500"};
-                
-//                JComboBox speedBox = new JComboBox<String>(speedOptions);
-                
+                                
                 String targetValue = "830 - Praise God From Whom All Blessings Flow";
                 for (int i = 0; i < comboBox.getItemCount(); i++) {
                     // Get item and compare its specific property
@@ -206,32 +285,14 @@ public class PanelWithOutlinedLabel {
                     }
                 }
                 
-//                JPanel comboContainer = new JPanel();
-//                
-//                Dimension comboContainerSize = comboContainer.getPreferredSize();
-//                
-//                comboContainerSize.height = 35;
-//                comboContainerSize.width = 700;
-//                comboContainer.setMinimumSize(comboContainerSize);                
-//                comboContainer.setMaximumSize(comboContainerSize);                
-//                comboContainer.setPreferredSize(comboContainerSize);                
-                
                 Dimension comboBoxSize = comboBox.getPreferredSize();
 
                 comboBoxSize.height = 25; 
                 comboBoxSize.width = 650;
                 comboBox.setMinimumSize(comboBoxSize);                
                 comboBox.setMaximumSize(comboBoxSize);                
-                comboBox.setPreferredSize(comboBoxSize);                
+                comboBox.setPreferredSize(comboBoxSize);   
                 
-//                Dimension speedBoxSize = comboBox.getPreferredSize();
-//
-//                speedBoxSize.height = 25; 
-//                speedBoxSize.width = 150;
-//                speedBox.setMinimumSize(speedBoxSize);                
-//                speedBox.setMaximumSize(speedBoxSize);                
-//                speedBox.setPreferredSize(speedBoxSize);                
-
                 comboBox.addActionListener(e -> {
              		Object selected = comboBox.getSelectedItem();
              		if (selected instanceof Hymn) {
@@ -240,13 +301,101 @@ public class PanelWithOutlinedLabel {
              		    currentHymnID = selectedMenuItem.getHymnID();
              		}
                 });
-             	
-                JTextField editor = (JTextField) comboBox.getEditor().getEditorComponent();
+                   
+                comboBox.setBackground(Color.decode("#00DD00"));
+                comboBox.setForeground(Color.decode("#004400"));
 
-//                comboContainer.add(comboBox);
-//                comboContainer.add(speedBox);
-//                menuPane.add(comboContainer);
+                comboBox.setUI(new BasicComboBoxUI() {
+                    @Override
+                    protected JButton createArrowButton() {
+                        // Parameters: direction, background, shadow, darkShadow, highlight
+                        BasicArrowButton arrow = new BasicArrowButton(
+                            BasicArrowButton.SOUTH,
+                            Color.decode("#00DD00"),  // Box Background
+                            Color.decode("#004400"),      // Shadow
+                            Color.decode("#004400"),      // Dark Shadow (Arrow Triangle Color)
+                            Color.decode("#004400")        // Highlight
+                        );
+                        return arrow;
+                    }
+
+                    @Override
+                    protected void installDefaults() {
+                        super.installDefaults();
+                        // Uninstalls the Look and Feel default border completely
+                        LookAndFeel.uninstallBorder(comboBox); 
+                    }
+
+//                    @Override
+//                    protected ComboPopup createPopup() {
+//                        // Instantiate the default popup component
+//                        BasicComboPopup basicComboPopup = new BasicComboPopup(comboBox);
+//                        
+//                        // Apply your custom line border color and thickness
+//                        basicComboPopup.setBorder(new LineBorder(Color.decode("#004400"), 1)); 
+//                        
+//                        return basicComboPopup;
+//                    }
+                    
+                    @Override
+                    protected ComboPopup createPopup() { 
+                        BasicComboPopup popup =  new BasicComboPopup(comboBox) {
+                            @Override
+                            protected JScrollPane createScroller() {
+                                JScrollPane scroller = super.createScroller();
+                                
+                                // Customize the vertical scrollbar's UI colors
+                                scroller.getVerticalScrollBar().setUI(new BasicScrollBarUI() {
+                                    @Override
+                                    protected void configureScrollBarColors() {
+                                        this.thumbColor = Color.decode("#004400");      // Color of the draggable thumb
+                                        this.trackColor = Color.decode("#008800");     // Color of the background track
+                                        this.thumbDarkShadowColor = Color.decode("#004400");
+                                        this.thumbHighlightColor = Color.decode("#004400");
+                                    }
+                                    
+                                    @Override
+                                    protected JButton createDecreaseButton(int orientation) {
+                                    	return new BasicArrowButton(orientation, 
+                                                Color.decode("#00DD00"), Color.decode("#004400"), Color.decode("#004400"), Color.decode("#004400"));
+                                    }
+                                    @Override
+                                    protected JButton createIncreaseButton(int orientation) {
+                                    	return new BasicArrowButton(orientation, 
+                                                Color.decode("#00DD00"), Color.decode("#004400"), Color.decode("#004400"), Color.decode("#004400"));                                    }
+                                });
+                                return scroller;
+                            }
+                        };
+                        popup.setBorder(new LineBorder(Color.decode("#004400"), 1)); 
+                        
+                        return popup;
+                    }
+                });
                 
+                JTextField editor = (JTextField) comboBox.getEditor().getEditorComponent();
+                editor.setCaretColor(Color.decode("#00DD00"));
+                editor.setForeground(Color.decode("#004400"));
+                editor.setBackground(Color.decode("#00DD00"));
+                editor.setBorder(BorderFactory.createEmptyBorder());
+                
+//                comboBox.setBorder(new EmptyBorder(0, 0, 0, 0));
+//                
+//                for (int i = 0; i < comboBox.getComponentCount(); i++) {
+//                    Component comp = comboBox.getComponent(i);
+//                    if (comp instanceof JComponent) {
+//                        ((JComponent) comp).setBorder(new EmptyBorder(0, 10, 0, 10));
+//                    }
+//                    if (comp instanceof AbstractButton) {
+//                        ((AbstractButton) comp).setBorderPainted(false);
+//                    }
+//                }
+//                
+//                if (comboBox.getEditor() != null && comboBox.getEditor().getEditorComponent() instanceof JComponent) {
+//                    JComponent editorBox = (JComponent) comboBox.getEditor().getEditorComponent();
+//                    editorBox.setBorder(new EmptyBorder(0, 0, 0, 0));
+//                }
+                                                
                 menuPane.add(comboBox);
                 
         		comboBox.addPopupMenuListener(new PopupMenuListener() {
@@ -347,25 +496,36 @@ public class PanelWithOutlinedLabel {
         	startButton = new JButton("Start Hymn Text");
         	Font buttonFont = new Font("Times New Roman", Font.ITALIC | Font.BOLD, 18);
         	startButton.setFont(buttonFont);
-        	startButton.setFocusPainted(false);
+        	startButton.setBackground(Color.decode("#00DD00"));
+        	startButton.setForeground(Color.decode("#004400"));
+//        	startButton.setContentAreaFilled(false); 
+        	startButton.setOpaque(true);
         	startButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        	        	        	
+        	
+//        	startButton.setFocusPainted(false);
+        	startButton.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15)); // Default padding
+        	
+        	startButton.addMouseListener(new java.awt.event.MouseAdapter() {
+        	    @Override
+        	    public void mouseEntered(java.awt.event.MouseEvent evt) {
+        	        // Change to your desired hover line color
+        	        startButton.setBorder(compound); 
+        	    }
+
+        	    @Override
+        	    public void mouseExited(java.awt.event.MouseEvent evt) {
+        	        // Revert to original border when not hovering
+        	        startButton.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15)); 
+        	    }
+        	});
+
         	buttonPanel.add(startButton);
-        	buttonPanel.setBackground(Color.decode("#F9EECF"));
+        	buttonPanel.setBackground(Color.decode("#00EE00"));
         	menuPane.add(buttonPanel);
         	
-        	menuPane.setBackground(Color.decode("#F9EECF"));
-        	menuPane.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        	
-//        	menuFrame.add(menuPane);
-        	
-//            singFrame = new JFrame("Hymn Text Window");
-//            singFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//            singFrame.setLocationRelativeTo(null); 
-//            singFrame.setUndecorated(true);
-//            singFrame.setBackground(Color.GREEN);
-//        	singFrame.setIconImages(icons);
-        	
+        	menuPane.setBackground(Color.decode("#00EE00"));
+        	menuPane.setBorder(BorderFactory.createLineBorder(Color.decode("#004400")));
+        	        	
             singFrame = new JFrame();
             singFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             singFrame.setLocationRelativeTo(null); 
@@ -382,26 +542,7 @@ public class PanelWithOutlinedLabel {
             	singFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
             	singFrame.setVisible(true);
             }
-            
-//            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-//            GraphicsDevice[] gd2 = ge.getScreenDevices();
-//
-//            // Choose the secondary monitor (index 1)
-//            if (gd2.length > 1) {
-//                Rectangle bounds = gd2[1].getDefaultConfiguration().getBounds();
-//                // Position the frame on the second screen
-//                singFrame.setLocation(bounds.x, bounds.y);
-//            }
-//            singFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
                                     
-//            Rectangle singBounds = singFrame.getBounds();
-//            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-//            int newY = screenSize.height - singBounds.height - yOffset;
-//            
-//            singFrame.setLocation(singBounds.x, newY);
-            
-//            singFrame.setUndecorated(true);
-                        
             mainContainer = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -455,17 +596,20 @@ public class PanelWithOutlinedLabel {
         	                    smallPanel.setVisible(true);
                             	infoFadeInTimer.start();
                             }                    		
-                    	} else if (menuPane.isVisible() == true) {
-                    		if (comboBox.isPopupVisible() == true) {
-                    			comboBox.setSelectedIndex(0);
-                    		} else {
-                    			startButton.doClick();
-                    		}
-                    	}
+//                    	} else if (menuPane.isVisible() == true) {
+//                    		if (comboBox.isPopupVisible() == true) {
+//                    			comboBox.setSelectedIndex(0);
+//                    		} else {
+//                    			startButton.doClick();
+//                    		}
+                    	}	// VERSION-A
+                    	if (infoUp == true) {
+                        	infoFadeOutTimer.start();
+                        } // VERSION-B             		
                     } else if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                     	if (isTest == true) {
                     		System.exit(0);
-                    	} else if (menuPane.isVisible() == true) {
+//                    	} else if (menuPane.isVisible() == true) {	// VERSION-A
                     		
                     	} else if (infoAlpha > 0.0f && infoAlpha < 1.0f) {
                     		infoFadeInTimer.stop();
@@ -492,6 +636,8 @@ public class PanelWithOutlinedLabel {
                         		System.exit(0);
                         	}   
                         	songEnded = true;
+                	    	startButton.setEnabled(true);
+//                	    	startButton.setText("Start Hymn Text");	// VERSION-B
                     	} else if (songEnded == false) {
                         	songStarted = false;
                         	infoAlpha = 0.0f;
@@ -515,10 +661,38 @@ public class PanelWithOutlinedLabel {
                         		System.exit(0);
                         	}   
                         	songEnded = true;
-                    	} else {
-                    		songEnded = false;
-                    		menuPane.setVisible(true);
-                    	}
+                	    	startButton.setEnabled(true);
+//                	    	startButton.setText("Start Hymn Text");	// VERSION-B
+                    	} 
+                    	else {
+                        	songStarted = false;
+                        	scrollAlpha = 0.0f;
+                        	scrollPane.repaint();                   	
+                        	smallPanel.repaint(); 
+                        	scrollNumber = 0;
+                			scrollPane.getVerticalScrollBar().setValue(scrollNumber);
+                			newLineCount = 0;
+                			lineWordCount = 0;
+//                        	menuFrame.toFront();
+                        	infoUp = false;
+                        	lyricsUp = false;
+                        	timerStatus = false;
+                        	if (currentTimer != null) {
+                        		currentTimer.stop();
+                        	}
+                        	currentTimer = null;
+                        	currentNoteNumber = 0;
+                        	if (isTest == true) {
+                        		System.exit(0);
+                        	}   
+                        	songEnded = true;
+                	    	startButton.setEnabled(true);
+                	    	startButton.setText("Start Hymn Text");
+                    	}	// VERSION-B
+//                    	else {
+//                    		songEnded = false;
+//                    		menuPane.setVisible(true);
+//                    	}	// VERSION-A
                     } else if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_OPEN_BRACKET) {
                     	changeTrackSpeed(1);
                     } else if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_CLOSE_BRACKET) {
@@ -528,116 +702,20 @@ public class PanelWithOutlinedLabel {
                 }
             });
             
-//            Action spacebarAction = new AbstractAction() {
-//                @Override
-//                public void actionPerformed(ActionEvent e) {
-//                    if (timerStatus == false && lyricsUp == true) {
-//                    	currentTimer.start();
-//                    	timerStatus = true;
-//                    } else {
-//                    	currentTimer.stop();
-//                    	timerStatus = false;
-//                    }
-//                    // Add your custom logic here
-//                }
-//            };
-            
-//            Action enterAction = new AbstractAction() {
-//                @Override
-//                public void actionPerformed(ActionEvent e) {
-//                    if (infoUp == true) {
-//                    	infoFadeOutTimer.start();
-//                    }
-//                }
-//            };
-
-//            KeyStroke spacebarPressed = KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0, false); // false means on key press
-//            KeyStroke enterKeyPressed = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
-            
-//            ActionListener escapeActionListener = new ActionListener() {
-//                @Override
-//                public void actionPerformed(ActionEvent e) {
-//                    System.exit(0); 
-//                }
-//            };
-
-//            singFrame.getRootPane().registerKeyboardAction(
-//                    escapeActionListener, 
-//                    KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), 
-//                    JComponent.WHEN_IN_FOCUSED_WINDOW // Condition for when the action is available
-//                );
-            
-            // 3. Bind the Key Stroke to the Action
-//            mainContainer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(spacebarPressed, "performSpacebarAction");
-//            mainContainer.getActionMap().put("performSpacebarAction", spacebarAction);
-//            InputMap inputMap = mainContainer.getInputMap(JComponent.WHEN_FOCUSED);
-//            ActionMap actionMap = mainContainer.getActionMap();
-//            String actionName = "performEnterAction";
-//            inputMap.put(enterKeyPressed, actionName);
-//            actionMap.put(actionName, enterAction);
-            
-            // 1. Define an Action for the '[' key
-//            Action leftBracketAction = new AbstractAction() {
-//                @Override
-//                public void actionPerformed(ActionEvent e) {
-//                    changeTrackSpeed(1);
-//                }
-//            };
-
-            // 2. Get the InputMap
-            // WHEN_IN_FOCUSED_WINDOW makes the binding work when frame has focus
-//            InputMap inputMapLeft = mainContainer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-//            ActionMap actionMapLeft = mainContainer.getActionMap();
-
-            // 3. Map the Key Stroke to a key
-//            KeyStroke leftBracketKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_OPEN_BRACKET, 0);
-//            String leftBracketKey = "triggerLeftBracketAction";
-//            inputMapLeft.put(leftBracketKeyStroke, leftBracketKey);
-
-            // 4. Map the key string to the Action object
-//            actionMapLeft.put(leftBracketKey, leftBracketAction);
-            
-            // 1. Define an Action for the '[' key
-//            Action rightBracketAction = new AbstractAction() {
-//                @Override
-//                public void actionPerformed(ActionEvent e) {
-//                    changeTrackSpeed(-1);
-//                }
-//            };
-
-            // 2. Get the InputMap
-            // WHEN_IN_FOCUSED_WINDOW makes the binding work when frame has focus
-//            InputMap inputMapRight = mainContainer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-//            ActionMap actionMapRight = mainContainer.getActionMap();
-
-            // 3. Map the Key Stroke to a key
-//            KeyStroke rightBracketKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_CLOSE_BRACKET, 0);
-//            String rightBracketKey = "triggerRightBracketAction";
-//            inputMapRight.put(rightBracketKeyStroke, rightBracketKey);
-
-            // 4. Map the key string to the Action object
-//            actionMapRight.put(rightBracketKey, rightBracketAction);
-
             mainContainer.setLayout(new BoxLayout(mainContainer, BoxLayout.Y_AXIS));
             
             scrollPane = new JScrollPane(mainContainer,
                     VERTICAL_SCROLLBAR_NEVER,
                     HORIZONTAL_SCROLLBAR_NEVER);
             
-//            setLayout(null);
-//            scrollPane.setBounds(0,0,1200,325);
-//            scrollPane.setViewportBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));  
             scrollPane.getViewport().setBackground(new Color(0,0,0,0));
             scrollPane.setBorder(null);
             
-         // Get the input map for when the component (e.g., JTextField) has focus
             InputMap im = mainContainer.getInputMap(JComponent.WHEN_FOCUSED);
 
-            // Bind the UP and DOWN arrow keys to a "none" action to override defaults
             im.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "none");
             im.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "none");
 
-            // Ensure "none" is mapped in the ActionMap to effectively consume the event
             mainContainer.getActionMap().put("none", new AbstractAction() {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {}
@@ -648,49 +726,49 @@ public class PanelWithOutlinedLabel {
             if (isTest == true) {
                 String[][] testHymnNames = 
                 	{
-                			{"Praise God From Whom All Blessings Flow","830","45","1.5"},	// 1:03:21
+                			{"Praise God From Whom All Blessings Flow","830","34","1.5"},	// 1:03:21
                 			{"Blest Are They","624","18","3"},	// 15:48
-                			{"Spirit, Spirit Of Gentleness","399","31","2"},
+                			{"Take Time To Be Holy","638","16","1.5"},	// 35:11
                 	};
                 String[][][] testHymnData = 
                 	{
                 			{
     	            			{"PRAISE@","h"},
     	            			{"GOD@","q"},
-    	            			{"FROM@","q"},	//BAR
+    	            			{"FROM@","q"},
     	            			{"WHOM@","q"},
     	            			{"ALL@","q"},
-    	            			{"BLESS","h"},	//BAR
+    	            			{"BLESS","h"},
     	            			{"INGS@","h"},
-    	            			{"FLOW@","h"},	//BAR
-    	            			{"","w"},	//BAR
+    	            			{"FLOW@","h"},
+//    	            			{"","w"},
     	            			{"PRAISE@","h"},
     	            			{"HIM@","q"},
-    	            			{"ALL@","q"},	//BAR
+    	            			{"ALL@","q"},
     	            			{"CREA","q"},
     	            			{"TURES@","q"},
-    	            			{"HERE@","h"},	//BAR
+    	            			{"HERE@","h"},
     	            			{"BE","h"},
-    	            			{"LOW@","h"},	//BAR
-    	            			{"","w"},	//BAR
-    	            			{"PRAISE@","h"},
-    	            			{"HIM@","q"},
-    	            			{"A","q"},	//BAR
-    	            			{"BOVE@","q"},
-    	            			{"YE@","q"},
-    	            			{"HEAVEN","h"},	//BAR
-    	            			{"LY@","h"},
-    	            			{"HOST@","h"},	//BAR
+    	            			{"LOW@","h"},
     	            			{"","w"},
     	            			{"PRAISE@","h"},
+    	            			{"HIM@","q"},
+    	            			{"A","q"},
+    	            			{"BOVE@","q"},
+    	            			{"YE@","q"},
+    	            			{"HEAVEN","h"},
+    	            			{"LY@","h"},
+    	            			{"HOST@","h"},
+//    	            			{"","w"},
+    	            			{"PRAISE@","h"},
     	            			{"FA","q"},
-    	            			{"THER@","q"},	//BAR
+    	            			{"THER@","q"},
     	            			{"SON@","q"},
     	            			{"AND@","q"},
     	            			{"HO","h."},	
-    	            			{"LY@","h"},	//BAR
+    	            			{"LY@","h"},
     	            			{"GHOST@","h."},
-    	            			{"","w"},
+//    	            			{"","w"},
     	            			{"A","ww"},
     	            			{"MEN@","ww"},
     	            		},
@@ -973,7 +1051,186 @@ public class PanelWithOutlinedLabel {
     	            			{"GOD@","w."},
                 			},
                 			{
-                			}
+                				{"TAKE@","q."},
+                				{"TIME@","e"},
+                				{"TO@","e"},
+                				{"BE@","e"},
+                				{"HO","q."},
+                				{"LY@","q."},
+                				{"SPEAK@","q."},
+                				{"OFT@","e"},
+                				{"WITH@","e"},
+                				{"THY@","e"},
+                				{"LORD@","h."},
+                				{"A","q."},
+                				{"BIDE@","e"},
+                				{"IN@","e"},
+                				{"HIM@","e"},
+                				{"AL","q."},
+                				{"WAYS@","q."},
+                				{"AND@","q."},
+                				{"FEED@","e"},
+                				{"ON@","e"},
+                				{"HIS@","e"},
+                				{"WORD@","h."},
+                				{"MAKE@","q."},
+                				{"FRIENDS@","e"},
+                				{"OF@","e"},
+                				{"GOD'S@","e"},
+                				{"CHIL","q."},
+                				{"DREN@","q."},
+                				{"HELP@","q."},
+                				{"THOSE@","e"},
+                				{"WHO@","e"},
+                				{"ARE@","e"},
+                				{"WEAK@","h."},
+                				{"FOR","q."},
+                				{"GET","e"},
+                				{"TING@","e"},
+                				{"IN@","e"},
+                				{"NOTH","q."},
+                				{"ING@","q."},
+                				{"HIS@","q."},
+                				{"BLESS","e"},
+                				{"ING@","e"},
+                				{"TO@","e"},
+                				{"SEEK@","h."},
+                				{"","w"},
+                				{"TAKE@","q."},
+                				{"TIME@","e"},
+                				{"TO@","e"},
+                				{"BE@","e"},
+                				{"HO","q."},
+                				{"LY@","q."},
+                				{"THE@","q."},
+                				{"WORLD@","e"},
+                				{"RUSH","e"},
+                				{"ES@","e"},
+                				{"ON@","h."},
+                				{"SPEND@","q."},
+                				{"MUCH@","e"},
+                				{"TIME@","e"},
+                				{"IN@","e"},
+                				{"SE","q."},
+                				{"CRET@","q."},
+                				{"WITH@","q."},
+                				{"JE","e"},
+                				{"SUS@","e"},
+                				{"A","e"},
+                				{"LONE@","h."},
+                				{"BY@","q."},
+                				{"LOOK","e"},
+                				{"ING@","e"},
+                				{"TO@","e"},
+                				{"JE","q."},
+                				{"SUS@","q."},
+                				{"LIKE@","q."},
+                				{"HIM@","e"},
+                				{"THOU@","e"},
+                				{"SHALT@","e"},
+                				{"BE@","h."},
+                				{"THY@","q."},
+                				{"FRIENDS@","e"},
+                				{"IN@","e"},
+                				{"THY@","e"},
+                				{"CON","q."},
+                				{"DUCT@","q."},
+                				{"HIS@","q."},
+                				{"LIKE","e"},
+                				{"NESS@","e"},
+                				{"SHALL@","e"},
+                				{"SEE@","h."},
+                				{"","w"},
+                				{"TAKE@","q."},
+                				{"TIME@","e"},
+                				{"TO@","e"},
+                				{"BE@","e"},
+                				{"HO","q."},
+                				{"LY@","q."},
+                				{"LET@","q."},
+                				{"HIM@","e"},
+                				{"BE@","e"},
+                				{"THY@","e"},
+                				{"GUIDE@","h."},
+                				{"AND@","q."},
+                				{"RUN@","e"},
+                				{"NOT@","e"},
+                				{"BE","e"},
+                				{"FORE@","q."},
+                				{"HIM@","q."},
+                				{"WHAT","q."},
+                				{"EV","e"},
+                				{"ER@","e"},
+                				{"BE","e"},
+                				{"TIDE@","h."},
+                				{"IN@","q."},
+                				{"JOY@","e"},
+                				{"OR@","e"},
+                				{"IN@","e"},
+                				{"SOR","q."},
+                				{"ROW@","q."},
+                				{"STILL@","q."},
+                				{"FOL","e"},
+                				{"LOW@","e"},
+                				{"THY@","e"},
+                				{"LORD@","h."},
+                				{"AND@","q."},
+                				{"LOOK","e"},
+                				{"ING@","e"},
+                				{"TO@","e"},
+                				{"JE","q."},
+                				{"SUS@","q."},
+                				{"STILL@","q."},
+                				{"TRUST@","e"},
+                				{"IN@","e"},
+                				{"HIS@","e"},
+                				{"WORD@","h."},
+                				{"","w"},
+                				{"TAKE@","q."},
+                				{"TIME@","e"},
+                				{"TO@","e"},
+                				{"BE@","e"},
+                				{"HO","q."},
+                				{"LY@","q."},
+                				{"BE@","q."},
+                				{"CALM@","e"},
+                				{"IN@","e"},
+                				{"THY@","e"},
+                				{"SOUL@","h."},
+                				{"EACH@","q."},
+                				{"THOUGHT@","e"},
+                				{"AND@","e"},
+                				{"EACH@","e"},
+                				{"MO","q."},
+                				{"TIVE@","q."},
+                				{"BE","q."},
+                				{"NEATH@","e"},
+                				{"HIS@","e"},
+                				{"CON","e"},
+                				{"TROL@","h."},
+                				{"THUS@","q."},
+                				{"LED@","e"},
+                				{"BY@","e"},
+                				{"HIS@","e"},
+                				{"SPIR","q."},
+                				{"T@","q."},
+                				{"TO@","q."},
+                				{"FOUN","e"},
+                				{"TAINS@","e"},
+                				{"OF@","e"},
+                				{"LOVE@","h."},
+                				{"THOU@","q."},
+                				{"SOON@","e"},
+                				{"SHALT@","e"},
+                				{"BE@","e"},
+                				{"FIT","q."},
+                				{"TED@","q."},
+                				{"FOR@","q."},
+                				{"SERV","e"},
+                				{"ICE@","e"},
+                				{"A","q"},
+                				{"BOVE@","w."},
+                			},
                 	};
 
                 currentHymnData = testHymnData[testHymnID];
@@ -991,58 +1248,9 @@ public class PanelWithOutlinedLabel {
 //            fullPanel.setLayout(new OverlayLayout(fullPanel));
             fullPanel.setBorder(null);
             fullPanel.setBackground(Color.GREEN);
-            
-            JPanel controlPanel = new JPanel();
-            Dimension controlPanelSize = new Dimension(1000,48);
-            controlPanel.setPreferredSize(controlPanelSize);
-            controlPanel.setMinimumSize(controlPanelSize);
-            controlPanel.setMaximumSize(controlPanelSize);
-            controlPanel.setBackground(new Color(0, 0, 0, 0));
-	        JLabel controlSample = new JLabel("St. John's Presbyterian Church");
-	        controlSample.setFont(new Font("Serif", Font.BOLD, 24)); 
-	        controlSample.setForeground(Color.decode("#008800"));
-	        controlPanel.add(controlSample);
 
-//            JPanel controlPanel1 = new JPanel();
-//            Dimension control1Size = new Dimension(150,30);
-//            controlPanel1.setPreferredSize(control1Size);
-//            controlPanel1.setMinimumSize(control1Size);
-//            controlPanel1.setMaximumSize(control1Size);
-//            controlPanel1.setBackground(new Color(0, 0, 0, 0));
-//            JLabel controlInfo1 = new JLabel("Hymn #: 830");
-//            controlInfo1.setFont(new Font("Serif", Font.BOLD, 18)); 
-//            controlInfo1.setForeground(Color.decode("#008800"));
-//            controlPanel1.add(controlInfo1);
-//            controlPanel.add(controlPanel1);
-//
-//            JPanel controlPanel2 = new JPanel();
-//            Dimension control2Size = new Dimension(700,30);
-//            controlPanel2.setPreferredSize(control2Size);
-//            controlPanel2.setMinimumSize(control2Size);
-//            controlPanel2.setMaximumSize(control2Size);
-//            controlPanel2.setBackground(new Color(0, 0, 0, 0));
-//            JLabel controlInfo2 = new JLabel("Praise God From Whom All Blessings Flow");
-//            controlInfo2.setFont(new Font("Serif", Font.BOLD, 18)); 
-//            controlInfo2.setForeground(Color.decode("#008800"));
-//            controlPanel2.add(controlInfo2);
-//            controlPanel.add(controlPanel2);
-//            
-//            JPanel controlPanel3 = new JPanel();
-//            Dimension control3Size = new Dimension(150,30);
-//            controlPanel3.setPreferredSize(control3Size);
-//            controlPanel3.setMinimumSize(control3Size);
-//            controlPanel3.setMaximumSize(control3Size);
-//            controlPanel3.setBackground(new Color(0, 0, 0, 0));
-//            JLabel controlInfo3 = new JLabel("31");
-//            controlInfo3.setFont(new Font("Serif", Font.BOLD, 18)); 
-//            controlInfo3.setForeground(Color.decode("#008800"));
-//            controlPanel3.add(controlInfo3);
-//            controlPanel.add(controlPanel3);
-                                    
             JPanel mainPanel = new JPanel();
             mainPanel.setLayout(new OverlayLayout(mainPanel));
-//            mainPanel.setBackground(new Color(0, 0, 0, 0));
-//            mainPanel.setOpaque(false);
             mainPanel.setBorder(null);
             Dimension mainPanelSize = new Dimension(1450,280);
             mainPanel.setPreferredSize(mainPanelSize);
@@ -1057,16 +1265,7 @@ public class PanelWithOutlinedLabel {
             gbcText.anchor = GridBagConstraints.SOUTH; // Pins to bottom
             gbcText.insets = new Insets(0, 0, 100, 0); 
                         
-            largePanel = new JPanel(new GridBagLayout()) {
-//                @Override
-//                protected void paintComponent(Graphics g) {
-//                    super.paintComponent(g);
-//                    Graphics2D g2d = (Graphics2D) g;
-//                    // Set the transparency level using AlphaComposite.SrcOver
-//                    g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, infoAlpha));
-//
-//                }
-            };
+            largePanel = new JPanel(new GridBagLayout()) {};
             largePanel.setBackground(new Color(0, 0, 0, 0));
 //            largePanel.setBackground(Color.GREEN);
             largePanel.setBorder(null);
@@ -1182,16 +1381,7 @@ public class PanelWithOutlinedLabel {
             gbcMenu.anchor = GridBagConstraints.NORTH;
             gbcMenu.weighty = 1.0;
             
-            GridBagConstraints gbcControl = new GridBagConstraints();
-            gbcControl.gridx = 0;
-            gbcControl.gridy = 0;
-            gbcControl.weightx = 1.0; // Horizontal centering
-            gbcControl.weighty = 1.0; // Pushes component down
-            gbcControl.anchor = GridBagConstraints.SOUTH;
-            gbcControl.insets = new Insets(0, 0, 25, 0); 
-            
             fullPanel.add(mainPanel, gbcText);
-            fullPanel.add(controlPanel, gbcControl);
             fullPanel.add(menuPane, gbcMenu);
             singFrame.setVisible(true);
             singFrame.add(fullPanel);
@@ -1240,21 +1430,6 @@ public class PanelWithOutlinedLabel {
 	                smallPanel.repaint();
 	            }
 	        });
-//	        Timer firstFadeInTimer = new Timer(100, new ActionListener() {
-//	            @Override
-//	            public void actionPerformed(ActionEvent e) {
-//	            	((Timer)e.getSource()).stop(); 
-//	            	smallPanel.setVisible(true);
-//	            	smallPanel.repaint();
-//			        infoFadeInTimer.start();
-//	            }
-//	        });
-//	        largePanel.repaint();
-//	        smallPanel.repaint();
-//	        firstFadeInTimer.setRepeats(false);
-//	        firstFadeInTimer.start();
-//	        infoFadeInTimer.start();
-//	        infoUp = true;
 	        
 	        Action blankAction = new AbstractAction() {
 	            @Override
@@ -1300,7 +1475,7 @@ public class PanelWithOutlinedLabel {
 		        	    	System.exit(0);
 		        	    }
 		        	});
-
+		        	
 		        	startButton.addActionListener(new ActionListener() {
 		        	    @Override
 		        	    public void actionPerformed(ActionEvent e) {
@@ -1317,6 +1492,9 @@ public class PanelWithOutlinedLabel {
 
 		        	    		} else {
 		        	    			startButton.setEnabled(false);
+	        	                    smallPanel.setVisible(true);	// VERSION-B
+	                            	infoFadeInTimer.start();	// VERSION-B
+
 		            	            Connection conn = null;
 		            	            String connectionUrl = "jdbc:mysql://" + DB_HOST + ":" + PORT + "/" + DB_NAME + 
 		            	                                   "?verifyServerCertificate=false&useSSL=true";
@@ -1334,7 +1512,7 @@ public class PanelWithOutlinedLabel {
 		                                	size++;
 		                                	hymnNumber = rsHymnInfo.getInt("hymnNumber");
 		                                	hymnName = rsHymnInfo.getString("hymnTitle");
-		                                	hymnTempo = rsHymnInfo.getInt("hymnTempo");
+		                                	hymnTempo = rsHymnInfo.getInt("hymnTempo" + musician);
 		                                	allowedLength = rsHymnInfo.getDouble("hymnMaxBarLength");
 		                                }
 		                                if (size == 0) {
@@ -1369,15 +1547,16 @@ public class PanelWithOutlinedLabel {
 		                                setupHymnLyrics(currentHymnData);
 		                    	    	infoAlpha = 0.0f;
 		                    	    	scrollAlpha = 0.0f;
-		                    	    	menuPane.setVisible(false);
-		                    	    	
-//		                    	    	firstFadeInTimer.start();      
+//		                    	    	menuPane.setVisible(false);	// VERSION-A
+
+
+//		                    	    	firstFadeInTimer.start();    
 		                    	    	songStarted = true;
 
 		                            } catch (SQLException se) {
 		                            	JLabel failureMessage = new JLabel("Error. Cannot connect to hymn database.");
 		                            	failureMessage.setAlignmentX(Component.CENTER_ALIGNMENT);
-		                            	failureMessage.setForeground(Color.RED);
+		                            	failureMessage.setForeground(Color.decode("#004400"));
 		                            	menuPane.add(failureMessage);
 		                            	menuPane.revalidate(); // Recompute the layout
 		                            	menuPane.repaint();
@@ -1386,7 +1565,7 @@ public class PanelWithOutlinedLabel {
 		                            } catch (ArrayIndexOutOfBoundsException ae) {
 		                            	JLabel failureMessage = new JLabel("No data for this hymn yet.");
 		                            	failureMessage.setAlignmentX(Component.CENTER_ALIGNMENT);
-		                            	failureMessage.setForeground(Color.RED);
+		                            	failureMessage.setForeground(Color.decode("#004400"));
 		                            	menuPane.add(failureMessage);
 		                            	menuPane.revalidate(); // Recompute the layout
 		                            	menuPane.repaint();
@@ -1405,6 +1584,7 @@ public class PanelWithOutlinedLabel {
 		                                    se.printStackTrace();
 		                                } finally {
 			                    	    	startButton.setEnabled(true);
+//			                    	    	startButton.setText("Start Hymn Text");	// VERSION-B
 		                                }
 		                            }            	        	    			
 		        	    		}
@@ -1416,6 +1596,8 @@ public class PanelWithOutlinedLabel {
 		        }
 	        	
 	        }
+	        
+	        
             
         });
     }
@@ -1426,6 +1608,7 @@ public class PanelWithOutlinedLabel {
     		if (currentTimer != null) {
     			currentTimer.setDelay(hymnTempo);
     		}
+    		System.out.println(hymnTempo);
     	}
 	}
 
@@ -1452,37 +1635,6 @@ public class PanelWithOutlinedLabel {
 			currentTimer = noteList.get(currentNoteNumber).getTimer();
 			currentTimer.setDelay(hymnTempo);
 			currentTimer.start();
-//			if (currentNoteNumber > 0 && noteList.get(currentNoteNumber - 1).getIsScroll()) {
-//				scrollNumber += 280;
-////    			scrollPane.getVerticalScrollBar().setValue(scrollNumber);
-//
-//		        Timer fadeInTimer = new Timer(hymnTempo / 6 * 2, new ActionListener() {	// orig 15
-//		            @Override
-//		            public void actionPerformed(ActionEvent e) {
-//		            	scrollAlpha += 0.05f;
-//		                if (scrollAlpha >= 1.0f) {
-//		                	scrollAlpha = 1.0f;
-//		                    ((Timer) e.getSource()).stop();
-//		                }
-//		                scrollPane.repaint();
-//		            }
-//		        });
-//
-//		        Timer fadeOutTimer = new Timer(hymnTempo / 6 * 2, new ActionListener() {	// orig 30
-//		            @Override
-//		            public void actionPerformed(ActionEvent e) {
-//		            	scrollAlpha -= 0.05f;
-//		                if (scrollAlpha <= 0.0f) {
-//		                	scrollAlpha = 0.0f;
-//		        			scrollPane.getVerticalScrollBar().setValue(scrollNumber);
-//		                    ((Timer) e.getSource()).stop();
-//		                    fadeInTimer.start();
-//		                }
-//		                scrollPane.repaint();
-//		            }
-//		        });
-//		        fadeOutTimer.start();
-//			}
 
 			currentNoteNumber++;
 		} else {
@@ -1581,7 +1733,7 @@ public class PanelWithOutlinedLabel {
         JPanel currentLine = addNewLine(hymnLines);
                                 
         double currentBarLength = 0;
-        for (int i = 0; i < hymnData.length; i++) {
+        for (int i = 0; i < (hymnNumber == 830 && musician == 1 ? hymnData.length - 2 : hymnData.length); i++) {
         	// increase bar length based on current note type
         	if (hymnData[i][0].equals("")) {
         		currentBarLength += 0;
@@ -1616,96 +1768,42 @@ public class PanelWithOutlinedLabel {
         	}
         	Note newNote;
         	
-        	// NEW CODE
-        	lineWordCount++;
-        	if (hymnData[i][0].equals("*") && hymnData[i][1].equals("^")) {
+        	if (!(hymnData[i][0].equals("") && usePauses == false)) {
+            	lineWordCount++;
+            	if (hymnData[i][0].equals("*") && hymnData[i][1].equals("^")) {
 
-        	} else if (hymnData[i][0].equals("*") && hymnData[i][1].equals("*")) {
-        		lineWordCount = 0;
-        		currentBarLength = 0; 
-                currentLine = addNewLine(hymnLines);
-            	currentLine.add(new Note("  ", "*", isScrollLine, hymnTempo).getLabel());
-        	} else if (currentBarLength >= allowedLength && lineWordCount >= (hymnNumber == 830 ? 3 : 1)) {
-        		lineWordCount = 0;
-        		currentBarLength = 0;
-        		if (hymnData[i][0].equals("")) {
-            		newNote = new Note(hymnData[i][0], hymnData[i][1], isScrollLine, hymnTempo);
-        		} else if (hymnData[i][0].contains("@")) {
-            		newNote = new Note(hymnData[i][0].replace("@",""), hymnData[i][1], isScrollLine, hymnTempo);
+            	} else if (hymnData[i][0].equals("*") && hymnData[i][1].equals("*")) {
+            		lineWordCount = 0;
+            		currentBarLength = 0; 
+                    currentLine = addNewLine(hymnLines);
+                	currentLine.add(new Note("  ", "*", isScrollLine, hymnTempo).getLabel());
+            	} else if (currentBarLength >= allowedLength && lineWordCount >= (hymnNumber == 830 ? 3 : 1)) {
+            		lineWordCount = 0;
+            		currentBarLength = 0;
+            		if (hymnData[i][0].equals("") || hymnData[i][0].equals("%")) {
+                		newNote = new Note(hymnData[i][0], hymnData[i][1], isScrollLine, hymnTempo);
+            		} else if (hymnData[i][0].contains("@")) {
+                		newNote = new Note(hymnData[i][0].replace("@",""), hymnData[i][1], isScrollLine, hymnTempo);
+                	} else {
+                		newNote = new Note(hymnData[i][0].replace("@","").concat("-"), hymnData[i][1], isScrollLine, hymnTempo);
+                	}   
+                	currentLine.add(newNote.getLabel());
+                    currentLine = addNewLine(hymnLines);
+                	noteList.add(newNote);
             	} else {
-            		newNote = new Note(hymnData[i][0].replace("@","").concat("-"), hymnData[i][1], isScrollLine, hymnTempo);
-            	}   
-            	currentLine.add(newNote.getLabel());
-                currentLine = addNewLine(hymnLines);
-            	noteList.add(newNote);
-        	} else {
-            	newNote = new Note(hymnData[i][0].replace("@",""), hymnData[i][1], isScrollLine, hymnTempo);
-            	currentLine.add(newNote.getLabel());
-            	if (hymnData[i][0].contains("@")) {
-            		JLabel spaceLabel = new JLabel(" ");
-            		spaceLabel.setFont(new Font("Arial", Font.BOLD, 60));
-            		spaceLabel.setOpaque(false);
-            		spaceLabel.setPreferredSize(new Dimension(spaceLabel.getPreferredSize().width,newNote.getLabel().getPreferredSize().height));
-            		currentLine.add(spaceLabel);
-            	}    
-            	noteList.add(newNote);
+                	newNote = new Note(hymnData[i][0].replace("@",""), hymnData[i][1], isScrollLine, hymnTempo);
+                	currentLine.add(newNote.getLabel());
+                	if (hymnData[i][0].contains("@")) {
+                		JLabel spaceLabel = new JLabel(" ");
+                		spaceLabel.setFont(new Font("Arial", Font.BOLD, 60));
+                		spaceLabel.setOpaque(false);
+                		spaceLabel.setPreferredSize(new Dimension(spaceLabel.getPreferredSize().width,newNote.getLabel().getPreferredSize().height));
+                		currentLine.add(spaceLabel);
+                	}    
+                	noteList.add(newNote);
+            	}        		
         	}
         	
-//        	if (addedNewLine == false && (currentBarLength >= allowedLength && i + 1 < hymnData.length && lineWordCount >= 3)) {
-//        		currentBarLength = 0;
-//            	newLineCount++;
-//                if (newLineCount % 4 == 0 && newLineCount > 0) {
-//            		isScrollLine = true;
-//            	} else {
-//            		isScrollLine = false;
-//            	}
-//        		if (hymnData[i][0].equals("")) {
-//            		newNote = new Note(hymnData[i][0], hymnData[i][1], isScrollLine, hymnTempo);
-//        		} else if (hymnData[i][0].contains("@")) {
-//            		newNote = new Note(hymnData[i][0].replace("@",""), hymnData[i][1], isScrollLine, hymnTempo);
-//            	} else {
-//            		newNote = new Note(hymnData[i][0].replace("@","").concat("-"), hymnData[i][1], isScrollLine, hymnTempo);
-//            	}
-//            	currentLine.add(newNote.getLabel());
-//                currentLine = addNewLine(hymnLines);
-//                addedNewLine = true;
-//                isScrollLine = false;
-////            	if (newLineCount % 4 == 0 && newLineCount > 0) {
-////            		isScrollLine = true;
-////            	} else {
-////            		isScrollLine = false;
-////            	}
-//        	} else {
-//            	if (hymnData[i][0].equals("") && addedNewLine == false) {
-//                	newLineCount++;
-//                	lineWordCount = 0;
-////                	if (newLineCount % 4 == 0 && newLineCount > 0) {
-////                		isScrollLine = true;
-////                	} else {
-////                		isScrollLine = false;
-////                	}
-//            		addedNewLine = true;
-//            		currentBarLength = 0;
-//                    currentLine = addNewLine(hymnLines);
-//                	newNote = new Note(hymnData[i][0].replace("@",""), hymnData[i][1], isScrollLine, hymnTempo);
-//                	currentLine.add(newNote.getLabel());
-//                	isScrollLine = false;
-//            	} else {
-//                	newNote = new Note(hymnData[i][0].replace("@",""), hymnData[i][1], isScrollLine, hymnTempo);
-//                	currentLine.add(newNote.getLabel());
-//                	if (hymnData[i][0].contains("@")) {
-//                		JLabel spaceLabel = new JLabel(" ");
-//                		spaceLabel.setFont(new Font("Arial", Font.BOLD, 60));
-//                		spaceLabel.setOpaque(false);
-////                		spaceLabel.setBackground(Color.LIGHT_GRAY);
-//                		spaceLabel.setPreferredSize(new Dimension(spaceLabel.getPreferredSize().width,newNote.getLabel().getPreferredSize().height));
-//                		currentLine.add(spaceLabel);
-//                	}  
-//                	addedNewLine = false;   
-//                	isScrollLine = false;
-//            	}
-//        	}
-//        	noteList.add(newNote);
         }
         if (hymnLines.get(hymnLines.size() - 1).getComponentCount() == 0) {
         	hymnLines.remove(hymnLines.size() - 1);
@@ -1727,7 +1825,7 @@ public class PanelWithOutlinedLabel {
 				if (j < hymnLines.size() - 1 && ((JLabel) hymnLines.get(j + 1).getComponent(0)).getText().equals("")) {
 					noteList.get(noteCount - 1).setSlowScroll();
 				}
-				if (j < hymnLines.size() - 1 && ((JLabel) hymnLines.get(j + 1).getComponent(1)).getText().equals("")) {
+				if (j < hymnLines.size() - 1 && hymnLines.get(j + 1).getComponentCount() > 1 && ((JLabel) hymnLines.get(j + 1).getComponent(1)).getText().equals("")) {
 					noteList.get(noteCount - 1).setSlowScroll();
 				}
 			}
@@ -1756,4 +1854,47 @@ public class PanelWithOutlinedLabel {
 
 	}
 	
+}
+
+class CustomRadioIcon implements Icon {
+    private final Color color;
+    private final boolean isSelected;
+    private final int size = 16; // Diameter of the radio circle
+
+    public CustomRadioIcon(Color color, boolean isSelected) {
+        this.color = color;
+        this.isSelected = isSelected;
+    }
+
+    @Override
+    public void paintIcon(Component c, Graphics g, int x, int y) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Draw outer border circle
+        g2.setColor(Color.decode("#004400"));
+        g2.drawOval(x, y, size - 1, size - 1);
+
+        // Draw white interior background
+        g2.setColor(Color.decode("#00DD00"));
+        g2.fillOval(x + 1, y + 1, size - 2, size - 2);
+
+        // Draw the custom colored inner dot if selected
+        if (isSelected) {
+            g2.setColor(color);
+            g2.fillOval(x + 4, y + 4, size - 8, size - 8);
+        }
+
+        g2.dispose();
+    }
+
+    @Override
+    public int getIconWidth() {
+        return size;
+    }
+
+    @Override
+    public int getIconHeight() {
+        return size;
+    }
 }

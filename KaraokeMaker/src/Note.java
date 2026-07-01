@@ -1,10 +1,11 @@
 import java.awt.Font;
 
 import javax.swing.BorderFactory;
+import javax.swing.JLabel;
 import javax.swing.Timer;
 
 public class Note {
-	private OutlinedLabel thisLabel;
+	private JLabel thisLabel;
 	private Timer thisTimer;
 	private boolean scrollLine;
 	private boolean slowScroll;
@@ -21,9 +22,14 @@ public class Note {
 	Note (String noteString, String noteLength, boolean scrollLine, int wantedTempo) {
 		this.scrollLine = scrollLine;
 		this.overallSpeed = wantedTempo;
-		thisLabel = new OutlinedLabel(noteString, scrollLine);
-    	thisLabel.setFont(new Font("Arial", Font.BOLD, 60));
-    	thisWidth = thisLabel.getComponentWidth();
+		if (noteString.equals("%")) {
+			thisLabel = new ClapIconLabel();
+	    	thisWidth = ((ClapIconLabel) thisLabel).getComponentWidth();
+		} else {
+			thisLabel = new OutlinedLabel(noteString);
+	    	thisLabel.setFont(new Font("Arial", Font.BOLD, 60));
+	    	thisWidth = ((OutlinedLabel) thisLabel).getComponentWidth();
+		}
     	 
     	if (noteString == "*") {
     		thisSpeed = 0;
@@ -107,7 +113,11 @@ public class Note {
         		thisDelay += 1;
     		} else {
         		thisAnimX += thisSpeed;
-        		thisLabel.setAnimX(thisAnimX);
+        		if (thisLabel instanceof ClapIconLabel) {
+            		((ClapIconLabel) thisLabel).setAnimX(thisAnimX);
+        		} else {
+            		((OutlinedLabel) thisLabel).setAnimX(thisAnimX);
+        		}
         		thisLabel.repaint();
         		if (thisAnimX >= thisWidth) {
         			((Timer) e.getSource()).stop();
@@ -143,7 +153,7 @@ public class Note {
 		return thisTimer;
 	}
 	
-	public OutlinedLabel getLabel() {
+	public JLabel getLabel() {
 		return thisLabel;
 	}
 	

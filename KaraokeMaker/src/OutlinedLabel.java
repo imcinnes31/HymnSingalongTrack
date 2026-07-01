@@ -13,14 +13,12 @@ public class OutlinedLabel extends JLabel {
     private Color fillColor = Color.WHITE;
     private float outlineWidth = 5.0f;
     private Font font = new Font("Arial", Font.BOLD, 60);
-    private boolean isScroll;
     
 //    private Timer timer;
     private int animX = 0;
 
-    public OutlinedLabel(String text, boolean isScroll) {
+    public OutlinedLabel(String text) {
         super(text);
-        this.isScroll = isScroll;
         setBorder(null);
         // Ensure the label is opaque for proper background painting if needed
 //        timer = new Timer(50, e -> {
@@ -97,7 +95,6 @@ public class OutlinedLabel extends JLabel {
         
         Shape clip = g2.getClip();
         g2.setClip(0, 0, animX, getHeight());
-//        g2.setColor(isScroll == true ? new Color(235, 0, 0) : new Color(135,206,235));
         g2.setColor(new Color(135,206,235));
         g2.fill(shape);
         g2.setClip(clip);
